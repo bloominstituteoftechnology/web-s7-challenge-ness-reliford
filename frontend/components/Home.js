@@ -6,7 +6,7 @@ function Home() {
 
   let navigate = useNavigate();
   const handleClick = () => {
-    navigate("/")
+    navigate("/order")
   }
   return (
     <div>

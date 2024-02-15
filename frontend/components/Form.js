@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-
+import React, { useState } from 'react'
+import * as Yup from 'yup'
 
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
@@ -8,8 +8,20 @@ const validationErrors = {
   sizeIncorrect: 'size must be S or M or L'
 }
 
-// 👇 Here you will create your schema.
+const initialErrors = { fullName: '', size: ''};
 
+// 👇 Here you will create your schema.
+const formSchema = Yup.object().shape({
+    
+  fullName: Yup.string()
+    .min(3, validationErrors.fullNameTooShort)
+    .max(20, validationErrors.fullNameTooLong)
+    .required('Full Name is Required'),
+
+  size: Yup.string()
+    .oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
+    .required('Size is required'),
+})
 
 const toppings = [
   { topping_id: '1', text: 'Pepperoni' },
@@ -39,9 +51,12 @@ export default function Form() {
         toppings: []
       })
 
-  const areRequiredFieldsFilled = () => {
-      return formValues.fullName && formValues.size;
-    }
+  const [errors, setErrors] = useState(initialErrors)
+  const [enabled, setEnabled] = useState(false)
+  const [success, setsuccess] = useState('')
+  const [failure, setFailure] = useState('')
+
+//useEffect() to handle submit enabled
 
   const handleInputChange = evt => {
 
@@ -51,6 +66,11 @@ export default function Form() {
         [id]: value,
       });
 
+      // Yup 
+      //   .reach(formSchema, id)
+      //   .validate(value)
+      //   .then(() => {setErrors({...errors, [id]: ''})})
+      //   .catch((error)=>{setErrors({...errors, [id]: error.errors[0]})})
     }
 
   const handleToppingChange = evt => {
@@ -96,7 +116,7 @@ export default function Form() {
        { checkboxes }
         
       </div>
-      <input disabled={!areRequiredFieldsFilled()} type="submit" />
+      <input  type="submit" />
     </form>
   )
 }
