@@ -88,11 +88,11 @@ Here are some **invalid** payloads (test in Postman!):
 
 **Inside the [index.js](frontend/index.js) module:**
 
-- Wrap the `<App />` element using `BrowserRouter` from React Router.
+✅- Wrap the `<App />` element using `BrowserRouter` from React Router.
 
 **Inside the [App.js](./frontend/components/App.js) module:**
 
-- Inside the `nav`, render two `NavLinks`:
+✅- Inside the `nav`, render two `NavLinks`:
     1. One with text content **Home** that navigates to "/".
     2. One with text content **Order** that navigates to "/order".
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
+
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
   fullNameTooShort: 'full name must be at least 3 characters',
@@ -9,7 +10,7 @@ const validationErrors = {
 
 // 👇 Here you will create your schema.
 
-// 👇 This array could help you construct your checkboxes using .map in the JSX.
+
 const toppings = [
   { topping_id: '1', text: 'Pepperoni' },
   { topping_id: '2', text: 'Green Peppers' },
@@ -18,9 +19,54 @@ const toppings = [
   { topping_id: '5', text: 'Ham' },
 ]
 
-export default function Form() {
+const checkboxes = toppings.map((topping) => {
   return (
-    <form>
+    <label key={topping.topping_id}>
+      <input name={topping.text} type="checkbox" />
+      {topping.text}
+      <br />
+    </label>
+  );
+});
+
+
+
+export default function Form() {
+
+  const [formValues, setFormValues] = useState({
+        fullName: '',
+        size: '',
+        toppings: []
+      })
+
+  const areRequiredFieldsFilled = () => {
+      return formValues.fullName && formValues.size;
+    }
+
+  const handleInputChange = evt => {
+
+    const { id, value } = evt.target;
+      setFormValues({
+        ...formValues,
+        [id]: value,
+      });
+
+    }
+
+  const handleToppingChange = evt => {
+      const { checked, id } = evt.target;
+      const updatedToppings = checked ? [...formValues.toppings, id] :
+      formValues.toppings.filter((topping) => topping !== id)
+      setFormValues({...formValues, toppings: updatedToppings})
+    }
+
+  const onSubmit = evt => {
+    evt.preventDefault();
+    }
+
+
+  return (
+    <form onSubmit={onSubmit}>
       <h2>Order Your Pizza</h2>
       {true && <div className='success'>Thank you for your order!</div>}
       {true && <div className='failure'>Something went wrong</div>}
@@ -28,7 +74,7 @@ export default function Form() {
       <div className="input-group">
         <div>
           <label htmlFor="fullName">Full Name</label><br />
-          <input placeholder="Type full name" id="fullName" type="text" />
+          <input  value={formValues.fullName} onChange={handleInputChange} placeholder="Type full name" id="fullName" type="text" />
         </div>
         {true && <div className='error'>Bad value</div>}
       </div>
@@ -36,26 +82,21 @@ export default function Form() {
       <div className="input-group">
         <div>
           <label htmlFor="size">Size</label><br />
-          <select id="size">
+          <select value={formValues.size} onChange={handleInputChange} id="size">
             <option value="">----Choose Size----</option>
-            {/* Fill out the missing options */}
+            <option value="S">Small</option>
+            <option value="M">Medium</option>
+            <option value="L">Large</option>
           </select>
         </div>
         {true && <div className='error'>Bad value</div>}
       </div>
 
-      <div className="input-group">
-        {/* 👇 Maybe you could generate the checkboxes dynamically */}
-        <label key="1">
-          <input
-            name="Pepperoni"
-            type="checkbox"
-          />
-          Pepperoni<br />
-        </label>
+      <div value={formValues.toppings} onChange={handleToppingChange} className="input-group">
+       { checkboxes }
+        
       </div>
-      {/* 👇 Make sure the submit stays disabled until the form validates! */}
-      <input type="submit" />
+      <input disabled={!areRequiredFieldsFilled()} type="submit" />
     </form>
   )
 }
