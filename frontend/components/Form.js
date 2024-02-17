@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import * as Yup from 'yup'
+import axios from 'axios';
+
 
 // 👇 Here are the validation errors you will use with Yup.
 const validationErrors = {
@@ -9,6 +11,12 @@ const validationErrors = {
 }
 
 const initialErrors = { fullName: '', size: ''};
+
+const initialValues = {
+  fullName: '',
+  size: '',
+  toppings: []
+}
 
 // 👇 Here you will create your schema.
 const formSchema = Yup.object().shape({
@@ -21,6 +29,10 @@ const formSchema = Yup.object().shape({
   size: Yup.string()
     .oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
     .required('Size is required'),
+  
+  toppings: Yup
+    .array()
+    .of(Yup.string())
 })
 
 const toppings = [
@@ -34,7 +46,7 @@ const toppings = [
 const checkboxes = toppings.map((topping) => {
   return (
     <label key={topping.topping_id}>
-      <input name={topping.text} type="checkbox" />
+      <input name={topping.topping_id} type="checkbox" />
       {topping.text}
       <br />
     </label>
@@ -45,58 +57,80 @@ const checkboxes = toppings.map((topping) => {
 
 export default function Form() {
 
-  const [formValues, setFormValues] = useState({
-        fullName: '',
-        size: '',
-        toppings: []
-      })
-
+  //STATES
+  const [formValues, setFormValues] = useState(initialValues)
   const [errors, setErrors] = useState(initialErrors)
   const [enabled, setEnabled] = useState(false)
-  const [success, setsuccess] = useState('')
+  const [success, setSuccess] = useState('')
   const [failure, setFailure] = useState('')
 
-//useEffect() to handle submit enabled
+
+  //USE EFFECT - ENABLE SUBMIT BUTTON
+  useEffect(() => {
+    formSchema.isValid(formValues).then(isValid => {
+      setEnabled(isValid)
+    })
+  }, [formValues])
+
 
   const handleInputChange = evt => {
 
-    const { id, value } = evt.target;
+    let { id, value } = evt.target;
       setFormValues({
         ...formValues,
         [id]: value,
       });
 
-      // Yup 
-      //   .reach(formSchema, id)
-      //   .validate(value)
-      //   .then(() => {setErrors({...errors, [id]: ''})})
-      //   .catch((error)=>{setErrors({...errors, [id]: error.errors[0]})})
+      Yup 
+        .reach(formSchema, id)
+        .validate(value)
+        .then(() => { setErrors({...errors, [id]: ''}) })
+        .catch((error) => { setErrors({...errors, [id]: error.errors[0]}) })
     }
 
-  const handleToppingChange = evt => {
-      const { checked, id } = evt.target;
-      const updatedToppings = checked ? [...formValues.toppings, id] :
-      formValues.toppings.filter((topping) => topping !== id)
-      setFormValues({...formValues, toppings: updatedToppings})
-    }
+  const handleToppingChange = (event) => {
+    const { checked, name } = event.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      toppings: checked
+        ? [...prevValues.toppings, name]
+        : prevValues.toppings.filter((topping) => topping !== name),
+    }));
+    };
 
+
+   // FORM SUBMISSION 
   const onSubmit = evt => {
-    evt.preventDefault();
+      evt.preventDefault();
+      axios.post("http://localhost:9009/api/order", formValues)
+      .then(res => {
+        setSuccess(res.data.message)
+        setFailure('')
+      })
+      .catch(res => {
+        setSuccess('')
+        setFailure(res.response.data.message)
+      })
+      setFormValues(initialValues)
     }
 
 
   return (
     <form onSubmit={onSubmit}>
       <h2>Order Your Pizza</h2>
-      {true && <div className='success'>Thank you for your order!</div>}
-      {true && <div className='failure'>Something went wrong</div>}
+      {success && <div className='success'>{success}</div>}
+      {failure && <div className='failure'>{failure}</div>}
 
       <div className="input-group">
         <div>
           <label htmlFor="fullName">Full Name</label><br />
-          <input  value={formValues.fullName} onChange={handleInputChange} placeholder="Type full name" id="fullName" type="text" />
+          <input  value={formValues.fullName} 
+                  onChange={handleInputChange} 
+                  placeholder="Type full name" 
+                  id="fullName" 
+                  type="text" />
         </div>
-        {true && <div className='error'>Bad value</div>}
+        {errors.fullName && <div className='error'>{errors.fullName}</div>}
       </div>
 
       <div className="input-group">
@@ -109,14 +143,14 @@ export default function Form() {
             <option value="L">Large</option>
           </select>
         </div>
-        {true && <div className='error'>Bad value</div>}
+        {errors.size && <div className='error'>{errors.size}</div>}
       </div>
 
       <div value={formValues.toppings} onChange={handleToppingChange} className="input-group">
        { checkboxes }
         
       </div>
-      <input  type="submit" />
+      <input disabled={!enabled} type="submit" />
     </form>
   )
 }
