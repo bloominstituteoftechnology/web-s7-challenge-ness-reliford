@@ -24,7 +24,8 @@ const formSchema = Yup.object().shape({
   fullName: Yup.string()
     .min(3, validationErrors.fullNameTooShort)
     .max(20, validationErrors.fullNameTooLong)
-    .required('Full Name is Required'),
+    .required('Full Name is Required')
+    .trim(),
 
   size: Yup.string()
     .oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
